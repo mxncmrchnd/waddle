@@ -5,6 +5,7 @@ project(WADDLE VERSION 0.0.1)
 set(JUCE_DIR "D:/JUCE" CACHE PATH "Path to JUCE")
 add_subdirectory(${JUCE_DIR} JUCE)
 
+set(VST3_COPY_DIR "D:/VST3")
 
 juce_add_plugin(Waddle
     VERSION 0.0.1
@@ -14,7 +15,7 @@ juce_add_plugin(Waddle
     NEEDS_MIDI_INPUT FALSE
     NEEDS_MIDI_OUTPUT FALSE
     IS_MIDI_EFFECT FALSE
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    COPY_PLUGIN_AFTER_BUILD FALSE
     PLUGIN_MANUFACTURER_CODE Wadd
     PLUGIN_CODE Wd10
     FORMATS VST3 Standalone

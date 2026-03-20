@@ -2,187 +2,200 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-AudioPluginAudioProcessor::AudioPluginAudioProcessor()
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+WaddleAudioProcessor::WaddleAudioProcessor()
+    : AudioProcessor(BusesProperties()
+#if !JucePlugin_IsMidiEffect
+#if !JucePlugin_IsSynth
+                         .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+      )
 {
 }
 
-AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
+WaddleAudioProcessor::~WaddleAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String AudioPluginAudioProcessor::getName() const
+const juce::String WaddleAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool AudioPluginAudioProcessor::acceptsMidi() const
+bool WaddleAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
-bool AudioPluginAudioProcessor::producesMidi() const
+bool WaddleAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
-bool AudioPluginAudioProcessor::isMidiEffect() const
+bool WaddleAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
-double AudioPluginAudioProcessor::getTailLengthSeconds() const
+double WaddleAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int AudioPluginAudioProcessor::getNumPrograms()
+int WaddleAudioProcessor::getNumPrograms()
 {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    return 1;
 }
 
-int AudioPluginAudioProcessor::getCurrentProgram()
+int WaddleAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void AudioPluginAudioProcessor::setCurrentProgram (int index)
+void WaddleAudioProcessor::setCurrentProgram(int index)
 {
-    juce::ignoreUnused (index);
+    juce::ignoreUnused(index);
 }
 
-const juce::String AudioPluginAudioProcessor::getProgramName (int index)
+const juce::String WaddleAudioProcessor::getProgramName(int index)
 {
-    juce::ignoreUnused (index);
+    juce::ignoreUnused(index);
     return {};
 }
 
-void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void WaddleAudioProcessor::changeProgramName(int index, const juce::String &newName)
 {
-    juce::ignoreUnused (index, newName);
+    juce::ignoreUnused(index, newName);
 }
 
 //==============================================================================
-void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void WaddleAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    juce::ignoreUnused(samplesPerBlock);
+    currentSampleRate = sampleRate;
+    phase = 0.0;
+    smoothedGain.reset(sampleRate, 0.005); // 5ms smoothing time
+    smoothedGain.setCurrentAndTargetValue(1.0f);
 }
 
-void AudioPluginAudioProcessor::releaseResources()
+void WaddleAudioProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
 }
 
-bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool WaddleAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
     return true;
-  #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+#else
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono() && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
+#if !JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 
-void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
-                                              juce::MidiBuffer& midiMessages)
+float WaddleAudioProcessor::getEnvelopeGain(float p)
 {
-    juce::ignoreUnused (midiMessages);
+    float raw = 1.0f - std::exp(-5.0f * p);
+    float max = 1.0f - std::exp(-5.0f);
+    return raw / max;
+}
+
+void WaddleAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+                                        juce::MidiBuffer &midiMessages)
+{
+    juce::ignoreUnused(midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    auto *ph = getPlayHead();
+    if (ph == nullptr)
+        return;
+
+    auto position = ph->getPosition();
+    if (!position.hasValue())
+        return;
+    if (!position->getIsPlaying())
+        return;
+
+    auto bpmOpt = position->getBpm();
+    if (!bpmOpt.hasValue())
+        return;
+    double bpm = *bpmOpt;
+
+    auto ppqOpt = position->getPpqPosition();
+    if (!ppqOpt.hasValue())
+        return;
+
+    int numSamples = buffer.getNumSamples();
+    int numChannels = buffer.getNumChannels();
+
+    for (int sample = 0; sample < numSamples; ++sample)
     {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
+        double beatPosition = *ppqOpt + (sample / currentSampleRate) * (bpm / 60.0);
+        phase = std::fmod(beatPosition, 1.0);
+
+        float gain = getEnvelopeGain((float)phase);
+        smoothedGain.setTargetValue(gain);
+        float smoothGain = smoothedGain.getNextValue();
+
+        for (int channel = 0; channel < numChannels; ++channel)
+        {
+            float *channelData = buffer.getWritePointer(channel);
+            channelData[sample] *= smoothGain;
+        }
     }
 }
 
 //==============================================================================
-bool AudioPluginAudioProcessor::hasEditor() const
+bool WaddleAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return true;
 }
 
-juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
+juce::AudioProcessorEditor *WaddleAudioProcessor::createEditor()
 {
-    return new AudioPluginAudioProcessorEditor (*this);
-}
-
-//==============================================================================
-void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
-{
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused (destData);
-}
-
-void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused (data, sizeInBytes);
+    return new WaddleAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-// This creates new instances of the plugin..
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+void WaddleAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
-    return new AudioPluginAudioProcessor();
+    juce::ignoreUnused(destData);
+}
+
+void WaddleAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
+{
+    juce::ignoreUnused(data, sizeInBytes);
+}
+
+//==============================================================================
+juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
+{
+    return new WaddleAudioProcessor();
 }
