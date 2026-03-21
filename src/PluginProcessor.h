@@ -34,9 +34,10 @@ public:
     juce::AudioProcessorValueTreeState apvts;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-private:
-    float getEnvelopeGain (float p, float curve);
+    // Static so the envelope display can use it without a processor reference
+    static float getEnvelopeGain (float p, float curve);
 
+private:
     double currentSampleRate = 44100.0;
     double phase = 0.0;
     juce::LinearSmoothedValue<float> smoothedGain;

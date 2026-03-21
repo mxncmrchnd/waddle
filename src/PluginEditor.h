@@ -1,6 +1,25 @@
 #pragma once
 #include "PluginProcessor.h"
 
+//==============================================================================
+class EnvelopeDisplay : public juce::Component,
+                        private juce::AudioProcessorValueTreeState::Listener
+{
+public:
+    EnvelopeDisplay (juce::AudioProcessorValueTreeState& apvts);
+    ~EnvelopeDisplay() override;
+
+    void paint (juce::Graphics& g) override;
+
+private:
+    void parameterChanged (const juce::String& paramID, float newValue) override;
+
+    juce::AudioProcessorValueTreeState& apvts;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EnvelopeDisplay)
+};
+
+//==============================================================================
 class WaddleAudioProcessorEditor final : public juce::AudioProcessorEditor,
                                          private juce::AudioProcessorValueTreeState::Listener
 {
@@ -16,6 +35,8 @@ private:
     void updateRateButtons();
 
     WaddleAudioProcessor& processorRef;
+
+    EnvelopeDisplay envelopeDisplay;
 
     juce::Slider depthKnob;
     juce::Label  depthLabel;

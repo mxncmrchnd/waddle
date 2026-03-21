@@ -100,9 +100,6 @@ bool WaddleAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 float WaddleAudioProcessor::getEnvelopeGain (float p, float curve)
 {
-    // Map curve 0.0->1.0 to exponent 1.0->10.0
-    // Low curve = slow recovery (stays cut longer)
-    // High curve = snappy recovery (bounces back quickly)
     float exponent = 1.0f + curve * 9.0f;
     float raw = 1.0f - std::exp (-exponent * p);
     float max = 1.0f - std::exp (-exponent);
@@ -134,9 +131,9 @@ void WaddleAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     auto ppqOpt = position->getPpqPosition();
     if (! ppqOpt.hasValue()) return;
 
-    float depth    = apvts.getRawParameterValue ("depth")->load();
-    float curve    = apvts.getRawParameterValue ("curve")->load();
-    int rateIndex  = (int) apvts.getRawParameterValue ("rate")->load();
+    float depth   = apvts.getRawParameterValue ("depth")->load();
+    float curve   = apvts.getRawParameterValue ("curve")->load();
+    int rateIndex = (int) apvts.getRawParameterValue ("rate")->load();
     const double rateValues[] = { 4.0, 2.0, 1.0, 0.5 };
     double rate = rateValues[rateIndex];
 

@@ -21,6 +21,15 @@ juce_add_plugin(Waddle
     FORMATS VST3 Standalone
     PRODUCT_NAME "Waddle")
 
+juce_add_binary_data(WaddleAssets
+    HEADER_NAME BinaryData.h
+    NAMESPACE BinaryData
+    SOURCES
+        assets/logo.png)
+
+target_compile_options(WaddleAssets PRIVATE $<TARGET_PROPERTY:Waddle,COMPILE_OPTIONS>)
+target_include_directories(WaddleAssets PRIVATE $<TARGET_PROPERTY:Waddle,INCLUDE_DIRECTORIES>)
+
 target_sources(Waddle
     PRIVATE
         src/PluginEditor.cpp
@@ -34,6 +43,7 @@ target_compile_definitions(Waddle
 
 target_link_libraries(Waddle
     PRIVATE
+    WaddleAssets
         juce::juce_audio_utils
     PUBLIC
         juce::juce_recommended_config_flags
