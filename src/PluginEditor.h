@@ -1,8 +1,8 @@
 #pragma once
-
 #include "PluginProcessor.h"
 
-class WaddleAudioProcessorEditor final : public juce::AudioProcessorEditor
+class WaddleAudioProcessorEditor final : public juce::AudioProcessorEditor,
+                                         private juce::AudioProcessorValueTreeState::Listener
 {
 public:
     explicit WaddleAudioProcessorEditor (WaddleAudioProcessor&);
@@ -12,7 +12,22 @@ public:
     void resized() override;
 
 private:
+    void parameterChanged (const juce::String& paramID, float newValue) override;
+    void updateRateButtons();
+
     WaddleAudioProcessor& processorRef;
+
+    juce::Slider depthKnob;
+    juce::Label  depthLabel;
+    juce::AudioProcessorValueTreeState::SliderAttachment depthAttachment;
+
+    juce::Slider curveKnob;
+    juce::Label  curveLabel;
+    juce::AudioProcessorValueTreeState::SliderAttachment curveAttachment;
+
+    static constexpr int numRateButtons = 4;
+    juce::TextButton rateButtons[numRateButtons];
+    const juce::String rateLabels[numRateButtons] = { "1/1", "1/2", "1/4", "1/8" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WaddleAudioProcessorEditor)
 };

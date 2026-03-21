@@ -35,7 +35,7 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
-    float getEnvelopeGain (float p);
+    float getEnvelopeGain (float p, float curve);
 
     double currentSampleRate = 44100.0;
     double phase = 0.0;
