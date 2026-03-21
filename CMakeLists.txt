@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(WADDLE VERSION 0.0.1)
+project(WADDLE VERSION 1.0.0)
 
 set(JUCE_DIR "D:/JUCE" CACHE PATH "Path to JUCE")
 add_subdirectory(${JUCE_DIR} JUCE)
@@ -8,7 +8,7 @@ add_subdirectory(${JUCE_DIR} JUCE)
 set(VST3_COPY_DIR "D:/VST3")
 
 juce_add_plugin(Waddle
-    VERSION 0.0.1
+    VERSION 1.0.0
     COMPANY_NAME "Maxence Marchand"
     BUNDLE_ID "com.maxencemarchand.waddle"
     IS_SYNTH FALSE
@@ -25,7 +25,8 @@ juce_add_binary_data(WaddleAssets
     HEADER_NAME BinaryData.h
     NAMESPACE BinaryData
     SOURCES
-        assets/logo.png)
+        assets/logo.png
+        assets/Geoform.otf)
 
 target_compile_options(WaddleAssets PRIVATE $<TARGET_PROPERTY:Waddle,COMPILE_OPTIONS>)
 target_include_directories(WaddleAssets PRIVATE $<TARGET_PROPERTY:Waddle,INCLUDE_DIRECTORIES>)
