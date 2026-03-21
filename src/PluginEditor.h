@@ -2,14 +2,12 @@
 
 #include "PluginProcessor.h"
 
-//==============================================================================
 class WaddleAudioProcessorEditor final : public juce::AudioProcessorEditor
 {
 public:
     explicit WaddleAudioProcessorEditor (WaddleAudioProcessor&);
     ~WaddleAudioProcessorEditor() override;
 
-    //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
 

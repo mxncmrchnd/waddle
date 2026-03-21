@@ -23,8 +23,8 @@ juce_add_plugin(Waddle
 
 target_sources(Waddle
     PRIVATE
-        PluginEditor.cpp
-        PluginProcessor.cpp)
+        src/PluginEditor.cpp
+        src/PluginProcessor.cpp)
 
 target_compile_definitions(Waddle
     PUBLIC
