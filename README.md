@@ -1,7 +1,7 @@
 # Waddle
 ![Logo](./assets/logo.png)
 
-![Version](https://img.shields.io/badge/version-1.0.0-808080?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.1.0-808080?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL%20v3-808080?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Windows-808080?style=flat-square)
 ![Language](https://img.shields.io/badge/language-C%2B%2B-808080?style=flat-square)
