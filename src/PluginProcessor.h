@@ -34,8 +34,8 @@ public:
     juce::AudioProcessorValueTreeState apvts;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    // Static so the envelope display can use it without a processor reference
-    static float getEnvelopeGain (float p, float curve);
+    // shape: 0=Exponential, 1=Linear, 2=Logarithmic, 3=Sine
+    static float getEnvelopeGain (float p, float curve, int shape);
 
 private:
     double currentSampleRate = 44100.0;

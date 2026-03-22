@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(WADDLE VERSION 1.0.0)
+project(WADDLE VERSION 1.1.0)
 
 set(JUCE_DIR "D:/JUCE" CACHE PATH "Path to JUCE")
 add_subdirectory(${JUCE_DIR} JUCE)
@@ -8,7 +8,7 @@ add_subdirectory(${JUCE_DIR} JUCE)
 set(VST3_COPY_DIR "D:/VST3")
 
 juce_add_plugin(Waddle
-    VERSION 1.0.0
+    VERSION 1.1.0
     COMPANY_NAME "Maxence Marchand"
     BUNDLE_ID "com.maxencemarchand.waddle"
     IS_SYNTH FALSE

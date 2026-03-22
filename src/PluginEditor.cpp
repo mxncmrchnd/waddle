@@ -2,7 +2,6 @@
 #include "PluginEditor.h"
 #include <BinaryData.h>
 
-// Helper to get the custom font — call this wherever you need it
 static juce::Font getGeoformFont (float size)
 {
     static auto typeface = juce::Typeface::createSystemTypefaceFor (
@@ -15,12 +14,14 @@ EnvelopeDisplay::EnvelopeDisplay (juce::AudioProcessorValueTreeState& a) : apvts
 {
     apvts.addParameterListener ("depth", this);
     apvts.addParameterListener ("curve", this);
+    apvts.addParameterListener ("shape", this);
 }
 
 EnvelopeDisplay::~EnvelopeDisplay()
 {
     apvts.removeParameterListener ("depth", this);
     apvts.removeParameterListener ("curve", this);
+    apvts.removeParameterListener ("shape", this);
 }
 
 void EnvelopeDisplay::parameterChanged (const juce::String&, float)
@@ -40,6 +41,7 @@ void EnvelopeDisplay::paint (juce::Graphics& g)
 
     float depth = apvts.getRawParameterValue ("depth")->load();
     float curve = apvts.getRawParameterValue ("curve")->load();
+    int   shape = (int) apvts.getRawParameterValue ("shape")->load();
 
     juce::Path envelopePath;
     int numSteps = (int) bounds.getWidth();
@@ -47,7 +49,7 @@ void EnvelopeDisplay::paint (juce::Graphics& g)
     for (int i = 0; i <= numSteps; ++i)
     {
         float phase = (float) i / (float) numSteps;
-        float gain  = 1.0f - depth * (1.0f - WaddleAudioProcessor::getEnvelopeGain (phase, curve));
+        float gain  = 1.0f - depth * (1.0f - WaddleAudioProcessor::getEnvelopeGain (phase, curve, shape));
 
         float x = bounds.getX() + phase * bounds.getWidth();
         float y = bounds.getBottom() - gain * bounds.getHeight();
@@ -127,21 +129,40 @@ WaddleAudioProcessorEditor::WaddleAudioProcessorEditor (WaddleAudioProcessor& p)
         addAndMakeVisible (rateButtons[i]);
     }
 
-    processorRef.apvts.addParameterListener ("rate", this);
-    updateRateButtons();
+    // Shape buttons
+    for (int i = 0; i < numShapeButtons; ++i)
+    {
+        shapeButtons[i].onClick = [this, i]()
+        {
+            auto* param = processorRef.apvts.getParameter ("shape");
+            float normalised = param->convertTo0to1 ((float) i);
+            param->setValueNotifyingHost (normalised);
+            updateShapeButtons();
+        };
+        addAndMakeVisible (shapeButtons[i]);
+    }
 
-    setSize (500, 380);
+    processorRef.apvts.addParameterListener ("rate",  this);
+    processorRef.apvts.addParameterListener ("shape", this);
+
+    updateRateButtons();
+    updateShapeButtons();
+
+    setSize (500, 440);
 }
 
 WaddleAudioProcessorEditor::~WaddleAudioProcessorEditor()
 {
-    processorRef.apvts.removeParameterListener ("rate", this);
+    processorRef.apvts.removeParameterListener ("rate",  this);
+    processorRef.apvts.removeParameterListener ("shape", this);
 }
 
 void WaddleAudioProcessorEditor::parameterChanged (const juce::String& paramID, float)
 {
     if (paramID == "rate")
         juce::MessageManager::callAsync ([this]() { updateRateButtons(); });
+    if (paramID == "shape")
+        juce::MessageManager::callAsync ([this]() { updateShapeButtons(); });
 }
 
 void WaddleAudioProcessorEditor::updateRateButtons()
@@ -162,6 +183,13 @@ void WaddleAudioProcessorEditor::updateRateButtons()
     }
 }
 
+void WaddleAudioProcessorEditor::updateShapeButtons()
+{
+    int currentShape = (int) processorRef.apvts.getRawParameterValue ("shape")->load();
+    for (int i = 0; i < numShapeButtons; ++i)
+        shapeButtons[i].setSelected (i == currentShape);
+}
+
 void WaddleAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colour (0xff1a1a1a));
@@ -177,20 +205,32 @@ void WaddleAudioProcessorEditor::paint (juce::Graphics& g)
 void WaddleAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced (20);
-    area.removeFromTop (50);
+    area.removeFromTop (50); // logo space
 
+    // Envelope display
     envelopeDisplay.setBounds (area.removeFromTop (120));
-    area.removeFromTop (10);
+    area.removeFromTop (8);
 
+    // Shape buttons row below envelope display
+    auto shapeArea = area.removeFromTop (50);
+    int shapeButtonWidth = shapeArea.getWidth() / numShapeButtons;
+    for (int i = 0; i < numShapeButtons; ++i)
+        shapeButtons[i].setBounds (shapeArea.removeFromLeft (shapeButtonWidth).reduced (3));
+
+    area.removeFromTop (8);
+
+    // Rate buttons on the right
     auto rateArea = area.removeFromRight (100);
     int buttonHeight = rateArea.getHeight() / numRateButtons;
     for (int i = 0; i < numRateButtons; ++i)
         rateButtons[i].setBounds (rateArea.removeFromTop (buttonHeight).reduced (2));
 
+    // Depth knob on the left
     auto depthArea = area.removeFromLeft (area.getWidth() / 2);
     depthLabel.setBounds (depthArea.removeFromTop (20));
     depthKnob.setBounds (depthArea.reduced (10));
 
+    // Curve knob in the middle
     curveLabel.setBounds (area.removeFromTop (20));
     curveKnob.setBounds (area.reduced (10));
 }
