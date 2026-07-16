@@ -3,7 +3,7 @@
 
 Waddle is a small VST3 plugin for sidechaining, made by Maxence Marchand, 2026.
 
-![Version](https://img.shields.io/badge/version-1.1.0-808080?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.0.0-808080?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL%20v3-808080?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Windows-808080?style=flat-square)
 ![Language](https://img.shields.io/badge/language-C%2B%2B-808080?style=flat-square)
@@ -25,7 +25,7 @@ Waddle is a small VST3 plugin for sidechaining, made by Maxence Marchand, 2026.
 
 ### Direct download
 
-Download if from the [latest release](https://github.com/mxncmrchnd/waddle/releases/download/v1.1.0/Waddle.vst3.zip), and drop the `Waddle.vst3` folder to your location of choice.
+Download if from the [latest release](https://github.com/mxncmrchnd/waddle/releases/download/v2.0.0/Waddle.vst3.zip), and drop the `Waddle.vst3` folder to your location of choice.
 
 ### Build from source
 
@@ -45,7 +45,7 @@ The built plugin will be at `build/Waddle_artefacts/Release/Waddle.vst3`.
 
 ## Features
 
-![Screenshot](./screenshot_2.png)
+![Screenshot](./screenshot_3.png)
 
 **Wave type** : the type of envelope (exponential, linear, logarithmic or sine)
 
@@ -54,6 +54,10 @@ The built plugin will be at `build/Waddle_artefacts/Release/Waddle.vst3`.
 **Curve** : how fast the volume gets back to its original level
 
 **Rate** : 1/1, 1/2, 1/4 or 1/8, the frequency of the sidechain (default : 1/4)
+
+**Attack** and **Recovery** : transition between the ends of the envelope. Includes *Shape* and *Time*
+- *Shape* : how steep the attack/recovery is
+- *Time* : how long the attack/recovery is (between 1 and 25% of the envelope)
 
 ## Demo project
 
