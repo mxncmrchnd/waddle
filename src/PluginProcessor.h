@@ -36,6 +36,9 @@ public:
 
     // shape: 0=Exponential, 1=Linear, 2=Logarithmic, 3=Sine
     static float getEnvelopeGain (float p, float curve, int shape);
+    static float computeOpenness (float phase, float curve, int shape,
+                               float attackAmt, float recoveryAmt,
+                               float attackFrac, float recoverFrac);
 
 private:
     double currentSampleRate = 44100.0;

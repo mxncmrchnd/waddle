@@ -65,6 +65,42 @@ private:
 };
 
 //==============================================================================
+// LookAndFeel that draws rotary knobs as a track + filled value arc,
+// with no pointer/handle line.
+class ArcLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
+                           float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle,
+                           juce::Slider& slider) override
+    {
+        auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (4.0f);
+        auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
+        auto centre = bounds.getCentre();
+        auto lineWidth = juce::jmax (2.0f, radius * 0.2f);
+        auto arcRadius = radius - lineWidth * 0.5f;
+
+        // Track (background arc)
+        juce::Path track;
+        track.addCentredArc (centre.x, centre.y, arcRadius, arcRadius,
+                             0.0f, rotaryStartAngle, rotaryEndAngle, true);
+        g.setColour (slider.findColour (juce::Slider::rotarySliderOutlineColourId));
+        g.strokePath (track, juce::PathStrokeType (lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+        // Value fill arc
+        auto toAngle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
+        if (toAngle > rotaryStartAngle)
+        {
+            juce::Path valueArc;
+            valueArc.addCentredArc (centre.x, centre.y, arcRadius, arcRadius,
+                                    0.0f, rotaryStartAngle, toAngle, true);
+            g.setColour (slider.findColour (juce::Slider::rotarySliderFillColourId));
+            g.strokePath (valueArc, juce::PathStrokeType (lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
+    }
+};
+
+//==============================================================================
 class EnvelopeDisplay : public juce::Component,
                         private juce::AudioProcessorValueTreeState::Listener
 {
@@ -100,6 +136,8 @@ private:
 
     WaddleAudioProcessor& processorRef;
 
+    ArcLookAndFeel arcLookAndFeel;
+
     EnvelopeDisplay envelopeDisplay;
 
     juce::Slider depthKnob;
@@ -109,6 +147,14 @@ private:
     juce::Slider curveKnob;
     juce::Label  curveLabel;
     juce::AudioProcessorValueTreeState::SliderAttachment curveAttachment;
+
+    juce::Slider attackShapeKnob, attackFracKnob;
+    juce::Label  attackShapeLabel, attackFracLabel;
+    juce::AudioProcessorValueTreeState::SliderAttachment attackShapeAttachment, attackFracAttachment;
+
+    juce::Slider recoveryShapeKnob, recoverFracKnob;
+    juce::Label  recoveryShapeLabel, recoverFracLabel;
+    juce::AudioProcessorValueTreeState::SliderAttachment recoveryShapeAttachment, recoverFracAttachment;
 
     static constexpr int numRateButtons = 4;
     juce::TextButton rateButtons[numRateButtons];
