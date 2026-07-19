@@ -5,7 +5,6 @@ Waddle is a small VST3 plugin for sidechaining, made by Maxence Marchand, 2026.
 
 ![Version](https://img.shields.io/badge/version-2.0.0-808080?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL%20v3-808080?style=flat-square)
-![Platform](https://img.shields.io/badge/platform-Windows-808080?style=flat-square)
 ![Language](https://img.shields.io/badge/language-C%2B%2B-808080?style=flat-square)
 ![Downloads](https://img.shields.io/github/downloads/mxncmrchnd/waddle/total?style=flat-square&color=808080)
 ![Repo Size](https://img.shields.io/github/repo-size/mxncmrchnd/waddle?style=flat-square&color=808080)
@@ -32,7 +31,7 @@ Download if from the [latest release](https://github.com/mxncmrchnd/waddle/relea
 ```bash
 git clone https://github.com/mxncmrchnd/waddle.git
 cd waddle
-cmake -B build -DJUCE_DIR=path/to/JUCE
+cmake -B build
 cmake --build build --config Release
 ```
  
@@ -40,7 +39,6 @@ The built plugin will be at `build/Waddle_artefacts/Release/Waddle.vst3`.
 
 ## Requirements
  
-- Windows 10 or later
 - A VST3-compatible DAW (FL Studio, Ableton, Reaper, etc.)
 
 ## Features
