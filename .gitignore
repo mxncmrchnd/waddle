@@ -16,6 +16,9 @@ JuceLibraryCode/
 .vscode/
 *.code-workspace
 
+# Archives
+*.zip
+
 # CMake
 CMakeCache.txt
 CMakeFiles/

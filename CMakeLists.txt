@@ -2,10 +2,16 @@ cmake_minimum_required(VERSION 3.22)
 
 project(WADDLE VERSION 2.0.0)
 
-set(JUCE_DIR "D:/JUCE" CACHE PATH "Path to JUCE")
-add_subdirectory(${JUCE_DIR} JUCE)
+include(FetchContent)
+FetchContent_Declare(
+    juce
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG 8.0.8
+    GIT_SHALLOW TRUE
+    UPDATE_DISCONNECTED TRUE
+)
+FetchContent_MakeAvailable(juce)
 
-set(VST3_COPY_DIR "D:/VST3")
 
 juce_add_plugin(Waddle
     VERSION 2.0.0
